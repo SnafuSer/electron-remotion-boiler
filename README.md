@@ -1,116 +1,116 @@
 # Electron Remotion Boilerplate
 
-Un starter ultra-complet pour créer des **applications Electron** capables de **générer des vidéos Remotion**, avec un frontend **Next.js** intégré.
+A fully-featured starter to build **Electron applications** capable of **generating Remotion videos**, with a **Next.js frontend**.
 
 ---
 
-## 🔥 Fonctionnalités principales
+## 🔥 Main Features
 
-- ⚡ Electron pour l'application desktop
-- 🎬 Remotion pour générer dynamiquement des vidéos
-- ⚙️ Next.js (React) comme moteur d'interface
-- 🚀 Téléchargement et intégration de **Chrome Headless Shell** au build
-- 🛠 Gestion propre du serveur Remotion interne (port dynamique)
-- 🧹 Remotion Compositing Binary correctement déplacé pour fonctionnement en production
-- 📦 Prêt pour être packagé avec **electron-builder**
-
----
-
-## 📜 Scripts disponibles
-
-| Commande                   | Description                                          |
-| --------------------------- | ---------------------------------------------------- |
-| `npm run dev`               | Lance le projet en mode développement                |
-| `npm run build`             | Compile le renderer (Next.js) + le backend (Electron) |
-| `npm run dist`              | Génére l'application installable (via electron-builder) |
-| `npm run prepare-chromium`  | Télécharge **Chrome Headless Shell** si absent        |
-| `npm run install-chromium`  | (alias possible) Installe manuellement Chromium      |
+- ⚡ Electron for the desktop application
+- 🎬 Remotion for dynamic video generation
+- ⚙️ Next.js (React) for the frontend engine
+- 🚀 Chrome Headless Shell automatically integrated during build
+- 🛠 Proper internal Remotion server management (dynamic port handling)
+- 🧹 Correctly relocated Remotion Compositing Binary for production
+- 📦 Ready for packaging with **electron-builder**
 
 ---
 
-## 🚀 Démarrage rapide
+## 📜 Available Scripts
 
-1. **Cloner le repo** :
+| Command                     | Description                                          |
+| ---------------------------- | ---------------------------------------------------- |
+| `npm run dev`                | Launch the project in development mode              |
+| `npm run build`              | Compile the renderer (Next.js) + backend (Electron)  |
+| `npm run dist`               | Build the final installable app (via electron-builder) |
+| `npm run prepare-chromium`   | Download **Chrome Headless Shell** if missing         |
+| `npm run install-chromium`   | (alias) Manually install Chromium                   |
+
+---
+
+## 🚀 Quick Start
+
+1. **Clone the repo**:
    ```bash
    git clone your-repo-url
    cd your-project
    ```
 
-2. **Installer les dépendances** :
+2. **Install dependencies**:
    ```bash
    npm install
    ```
 
-3. **Télécharger Chromium** (nécessaire pour Remotion) :
+3. **Download Chromium** (required for Remotion):
    ```bash
    npm run prepare-chromium
    ```
 
-4. **Lancer en développement** :
+4. **Run in development**:
    ```bash
    npm run dev
    ```
 
-5. **Compiler pour la production** :
+5. **Build for production**:
    ```bash
    npm run build
    ```
 
-6. **Créer un exécutable (.dmg, .exe, etc.)** :
+6. **Package the app (.dmg, .exe, etc.)**:
    ```bash
    npm run dist
    ```
 
 ---
 
-## 📚 Techniques utilisées
+## 📚 Techniques Used
 
-### 🛠 Chrome Headless Shell intégré
-- **Pourquoi ?**  
-  Chromium standard ne fonctionne plus correctement avec Remotion packagé.
-- **Comment ?**  
-  Un script `prepare-chromium` télécharge **chrome-headless-shell** adapté au système (`mac-arm64`, `mac-x64`, `win64`, `linux`) au moment du build.
+### 🛠 Chrome Headless Shell Integration
+- **Why?**  
+  Standard Chromium does not work properly with packaged Remotion apps.
+- **How?**  
+  A `prepare-chromium` script downloads the appropriate **chrome-headless-shell** for the system (`mac-arm64`, `mac-x64`, `win64`, `linux`) during build.
 
 ### 🧩 Remotion Compositing Binary
-- **Pourquoi ?**  
-  Le binaire `@remotion/compositor-xxx` ne fonctionne pas depuis l'`asar` d'Electron.
-- **Comment ?**  
-  Il est extrait dans un dossier `node_remotion` via `extraResources` dans `electron-builder` pour pouvoir être utilisé par Remotion à l'exécution.
+- **Why?**  
+  The `@remotion/compositor-xxx` binary cannot work from inside Electron's `asar` archive.
+- **How?**  
+  It is extracted into a `node_remotion` folder via `extraResources` during packaging, so Remotion can access it correctly at runtime.
 
-### 🌐 Serveur HTTP local pour Remotion
-- **Pourquoi ?**  
-  Remotion nécessite un serveur pour accéder aux fichiers HTML/JS en local.
-- **Comment ?**  
-  À chaque génération vidéo, un serveur HTTP (`serve-handler`) est lancé automatiquement sur un port libre entre **5050** et **5100**.
+### 🌐 Local HTTP Server for Remotion
+- **Why?**  
+  Remotion requires an HTTP server to load HTML/JS files locally.
+- **How?**  
+  A local server (`serve-handler`) is automatically launched on a free port between **5050** and **5100** every time a video is generated.
 
-### 🧠 Utilisation dynamique du port
-- **Comment ?**  
-  Avant de lancer le serveur Remotion, on vérifie que le port est disponible, sinon on incrémente jusqu’à trouver un port libre.
+### 🧠 Dynamic Port Usage
+- **How?**  
+  Before launching the Remotion server, the app checks if the port is available, otherwise increments until it finds a free one.
 
 ---
 
-## 🧩 Stack technique
+## 🧩 Tech Stack
 
-- Electron (backend + fenêtre desktop)
-- Remotion (vidéo dynamique React)
-- Next.js (UI frontend)
-- Puppeteer/Browsers (gestion de Chrome headless)
-- Serve-handler (serveur HTTP local temporaire)
-- Electron-builder (packaging multiplateforme)
+- Electron (backend + desktop window)
+- Remotion (React-based video rendering)
+- Next.js (frontend UI)
+- Puppeteer/Browsers (Chrome headless management)
+- Serve-handler (temporary HTTP server)
+- Electron-builder (cross-platform packaging)
 - Typescript (strict typing)
 
 ---
 
-## 📝 Notes importantes
+## 📝 Important Notes
 
-- Ce boilerplate ne génère que des vidéos **localement**, aucun serveur externe nécessaire.
-- Tout fonctionne offline après installation de Chromium.
-- Compatible Mac ARM, Mac Intel, Windows, Linux.
+- This boilerplate generates videos **locally** only — no external server required.
+- Everything works offline after downloading Chromium once.
+- Compatible with Mac ARM, Mac Intel, Windows, and Linux.
 
 ---
 
-## 🛠️ À personnaliser
+## 🛠️ To Customize
 
-- Modifier `remotion-video/` pour changer la vidéo générée
-- Modifier `renderer/` pour changer l'interface utilisateur
-- Adapter les `inputProps` dans `ipcMain.handle('generate-video')` pour passer vos propres paramètres à Remotion
+- Edit `remotion-video/` to change the generated video
+- Edit `renderer/` to customize the UI
+- Adapt `inputProps` in `ipcMain.handle('generate-video')` to pass your own data to Remotion
