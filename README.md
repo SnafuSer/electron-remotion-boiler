@@ -32,8 +32,8 @@ A fully-featured starter to build **Electron applications** capable of **generat
 
 1. **Clone the repo**:
    ```bash
-   git clone your-repo-url
-   cd your-project
+   git clone https://github.com/SnafuSer/electron-remotion-boiler.git
+   cd electron-remotion-boiler
    ```
 
 2. **Install dependencies**:
