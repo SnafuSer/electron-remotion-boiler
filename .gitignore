@@ -1,34 +1,95 @@
-# Logs
-logs
+# Node
+node_modules/
+.npm/
+.pnpm-debug.log
+yarn.lock
+package-lock.json
+
+# Build outputs
+dist/
+dist-electron/
+out/
+renderer/.next/
+remotion-video/build/
+
+# Renderer
+renderer/node_modules/
+
+# Electron
 *.log
+*.tsbuildinfo
+.DS_Store
+*.asar
+app-release.apk
+
+# Static servers
+.serve/
+.serve-handler-cache/
+
+# Temp files
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# Env files
+.env
+.env.local
+.env.production
+.env.development
+.env.*
+
+# Puppeteer / Chromium Cache
+.chromium-cache/
+.chromium/
+chrome-headless-shell/
+
+# Mac OS
+Icon?
+.DS_Store
+__MACOSX/
+
+# VSCode
+.vscode/
+.history/
+
+# Remotion cache
+.remotion/
+clipforge-remotion/
+
+# Other cache
+.cache/
+.next/
+turbo/
+.vercel/
+
+# Logs
+*.log
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-dist-electron
-out
-release
-*.local
+# Test
+coverage/
+*.test.ts
+*.spec.ts
+jest-*
 
-# Editor directories and files
-.vscode/.debug.env
-.idea
-.DS_Store
+# Byproducts
+remotion-binary/
+remotion-cache/
+
+# Misc
+.idea/
+*.iml
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
 
-#lockfile
-package-lock.json
-pnpm-lock.yaml
-yarn.lock
-/test-results/
-/playwright-report/
-/playwright/.cache/
+# Electron-builder extra resources
+**/resources/node_remotion/
+**/resources/chromium/
+**/resources/chrome-headless-shell/
+**/resources/chrome/

@@ -1,51 +1,87 @@
 {
-  "name": "electron-vite-react",
+  "name": "clipforge-boiler",
   "version": "1.0.0",
-  "main": "dist-electron/main/index.js",
-  "license": "MIT",
-  "private": true,
-  "debug": {
-    "env": {
-      "VITE_DEV_SERVER_URL": "http://127.0.0.1:7777/"
-    }
-  },
-  "type": "module",
+  "description": "ClipForge - Générateur de vidéos de quiz faceless",
+  "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "npm run bundle-remotion && vite",
-    "build": "npm run bundle-remotion && tsc && vite build && electron-builder",
-    "preview": "vite preview",
-    "pree2e": "vite build --mode=test",
-    "e2e": "playwright test",
-    "bundle-remotion": "node electron/remotion/bundleRemotion.js",
-    "video": "remotion studio src/remotion/index.ts"
+    "dev": "concurrently -k \"npm run dev:renderer\" \"npm run compile:electron\" \"npm run watch:remotion\" \"npm run serve:remotion\" \"npm run dev:electron\"",
+    "dev:renderer": "npm --prefix renderer run dev",
+    "compile:electron": "tsc -w",
+    "dev:electron": "wait-on tcp:3000 dist-electron/main.js && cross-env NODE_ENV=development electron .",
+    "watch:remotion": "chokidar 'remotion-video/src/**/*' -c \"npm run bundle:remotion\"",
+    "bundle:remotion": "npm --prefix remotion-video run bundle",
+    "serve:remotion": "serve -s remotion-video/build -l 5050",
+    "prepare:chrome": "node scripts/copy-chrome-shell.js",
+    "prepare:chromium": "ts-node scripts/prepare-chromium.ts",
+    "build": " npm run prepare:chromium && npm run bundle:remotion && npm --prefix renderer run build && tsc",
+    "dist": "electron-builder",
+    "start": "node start-electron.js",
+    "install-chromium": "node scripts/install-chromium.js",
+    "find-chromium": "node scripts/find-chromium.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@puppeteer/browsers": "^2.10.2",
+    "@types/electron": "^1.6.12",
+    "@types/node": "^22.14.1",
+    "chokidar-cli": "^3.0.0",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^35.2.0",
+    "electron-builder": "^26.0.12",
+    "electron-reload": "^2.0.0-alpha.1",
+    "puppeteer-core": "^24.7.1",
+    "serve": "^14.2.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "wait-on": "^8.0.3"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "@remotion/bundler": "4.0.252",
-    "@remotion/cli": "4.0.252",
-    "@remotion/player": "4.0.252",
-    "@remotion/renderer": "4.0.252",
-    "@remotion/zod-types": "4.0.252",
-    "electron-log": "^5.1.5",
-    "electron-updater": "^6.1.8",
-    "remotion": "4.0.252"
+    "@remotion/cli": "^4.0.290",
+    "dotenv": "^16.5.0",
+    "fs-extra": "^11.3.0",
+    "module-alias": "^2.2.3",
+    "puppeteer": "^24.7.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "remotion": "^4.0.290",
+    "serve-handler": "^6.1.6"
   },
-  "devDependencies": {
-    "@playwright/test": "^1.42.1",
-    "@types/bun": "^1.1.6",
-    "@types/react": "^18.2.64",
-    "@types/react-dom": "^18.2.21",
-    "@vitejs/plugin-react": "^4.2.1",
-    "autoprefixer": "^10.4.18",
-    "electron": "^31.1.0",
-    "electron-builder": "^24.13.3",
-    "postcss": "^8.4.35",
-    "postcss-import": "^16.0.1",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5.4.2",
-    "vite": "^5.1.5",
-    "vite-plugin-electron": "^0.28.4",
-    "vite-plugin-electron-renderer": "^0.14.5"
+  "build": {
+    "productName": "ClipForge",
+    "appId": "com.clipforge.app",
+    "asar": true,
+    "asarUnpack": [
+      "**/remotion-video/**",
+      "**/node_modules/puppeteer/.local-chromium/**",
+      "**/node_modules/@remotion/compositor-darwin-arm64/**"
+    ],
+    "extraResources": [
+      {
+        "from": "chrome-headless-shell",
+        "to": "chrome-headless-shell"
+      },
+      {
+        "from": "node_modules/@remotion/compositor-darwin-arm64",
+        "to": "node_remotion/compositor-darwin-arm64"
+      }
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "dist-electron/**/*",
+      "renderer/out/**/*",
+      "remotion-video/build/**/*",
+      "start-electron.js"
+    ],
+    "mac": {
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    }
   }
 }
