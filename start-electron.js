@@ -1,4 +1,4 @@
-// clipforge-boiler/start-electron.js
+// electron-remotion-boiler/start-electron.js
 const { spawn } = require('child_process');
 const path = require('path');
 

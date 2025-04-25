@@ -1,7 +1,7 @@
 {
-  "name": "clipforge-boiler",
+  "name": "electron-remotion-boiler",
   "version": "1.0.0",
-  "description": "ClipForge - Générateur de vidéos de quiz faceless",
+  "description": "electron-remotion-boiler - Starter template for video generation with Electron, Remotion",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "concurrently -k \"npm run dev:renderer\" \"npm run compile:electron\" \"npm run watch:remotion\" \"npm run serve:remotion\" \"npm run dev:electron\"",
@@ -11,13 +11,10 @@
     "watch:remotion": "chokidar 'remotion-video/src/**/*' -c \"npm run bundle:remotion\"",
     "bundle:remotion": "npm --prefix remotion-video run bundle",
     "serve:remotion": "serve -s remotion-video/build -l 5050",
-    "prepare:chrome": "node scripts/copy-chrome-shell.js",
     "prepare:chromium": "ts-node scripts/prepare-chromium.ts",
-    "build": " npm run prepare:chromium && npm run bundle:remotion && npm --prefix renderer run build && tsc",
+    "build": "npm run prepare:chromium && npm run bundle:remotion && npm --prefix renderer run build && tsc",
     "dist": "electron-builder",
-    "start": "node start-electron.js",
-    "install-chromium": "node scripts/install-chromium.js",
-    "find-chromium": "node scripts/find-chromium.js"
+    "start": "node start-electron.js"
   },
   "keywords": [],
   "author": "",
@@ -32,7 +29,6 @@
     "electron": "^35.2.0",
     "electron-builder": "^26.0.12",
     "electron-reload": "^2.0.0-alpha.1",
-    "puppeteer-core": "^24.7.1",
     "serve": "^14.2.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3",
@@ -42,7 +38,6 @@
     "@remotion/cli": "^4.0.290",
     "dotenv": "^16.5.0",
     "fs-extra": "^11.3.0",
-    "module-alias": "^2.2.3",
     "puppeteer": "^24.7.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

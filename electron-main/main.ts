@@ -1,54 +1,32 @@
+// electron-main/main.ts
+
 import 'dotenv/config';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import http from 'http';
 import serveHandler from 'serve-handler';
-import { pathToFileURL } from 'url';
 import { ipcMain, app, BrowserWindow, shell } from 'electron';
 import { getCompositions, renderMedia } from '@remotion/renderer';
-import net from 'net';
+import { findAvailablePort } from './utils/findAvailablePort';
+import { getChromiumExecutablePath } from './utils/getChromiumExecutablePath';
+import { setupLogger, log, getLogFilePath } from './utils/logger';
 
-// --- LOG SETUP ---
-const logFile = path.join(os.tmpdir(), 'clipforge-log.txt');
-const logStream = fs.createWriteStream(logFile, { flags: 'a' });
-function log(...args: any[]) {
-  const message = `[${new Date().toISOString()}] ` + args.join(' ');
-  logStream.write(message + '\n');
-  console.log('[LOG]', ...args);
-}
-
-ipcMain.handle('open-log-file', async () => {
-  await shell.openPath(logFile);
-});
-
-// --- CACHE DIR ---
+// Initialize Remotion cache
 const remotionCacheDir = path.join(os.tmpdir(), 'clipforge-remotion');
 fs.mkdirSync(remotionCacheDir, { recursive: true });
 process.env.REMOTION_CACHE_DIR = remotionCacheDir;
-log('✅ REMOTION_CACHE_DIR initialisé dans:', remotionCacheDir);
+log('✅ REMOTION_CACHE_DIR initialized at:', remotionCacheDir);
 
-// --- CHROMIUM PATH ---
-function getChromiumExecutablePath(): string {
-    if (!app.isPackaged) {
-        log('🔧 Dev mode : utilisation du navigateur par défaut (Remotion téléchargera)');
-        return null; // <- Remotion s’en charge en dev
-    }
-  const chromiumPath = path.join(
-    process.resourcesPath,
-    'chrome-headless-shell',
-    'chrome-headless-shell'
-  );
-  log('🧠 Chromium path resolved to:', chromiumPath);
-  if (!fs.existsSync(chromiumPath)) {
-    log('❌ Chromium NOT FOUND at resolved path');
-  } else {
-    log('✅ Chromium found');
-  }
-  return chromiumPath;
-}
+// Open log file from renderer
+setupLogger();
 
-// --- ELECTRON WINDOW ---
+ipcMain.handle('open-log-file', async () => {
+  const file = getLogFilePath();
+  await shell.openPath(file);
+});
+
+// Create Electron window
 let mainWindow: BrowserWindow | null;
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -65,7 +43,7 @@ function createWindow() {
     ? 'http://localhost:3000'
     : `file://${path.join(app.getAppPath(), 'renderer', 'out', 'index.html')}`;
 
-  log('🌐 Chargement de la fenêtre Electron depuis :', url);
+  log('🌐 Loading Electron window from:', url);
   mainWindow.loadURL(url);
   mainWindow.webContents.openDevTools();
   mainWindow.on('closed', () => (mainWindow = null));
@@ -73,62 +51,41 @@ function createWindow() {
 
 app.whenReady().then(createWindow);
 
-
-// --- PORT DYNAMIQUE ---
-async function findAvailablePort(startAt = 5050): Promise<number> {
-    const isFree = (port: number): Promise<boolean> =>
-      new Promise((resolve) => {
-        const server = net.createServer()
-          .once('error', () => resolve(false))
-          .once('listening', () => server.close(() => resolve(true)))
-          .listen(port);
-      });
-  
-    let port = startAt;
-    while (!(await isFree(port))) {
-      port++;
-      if (port > 5100) throw new Error('🛑 Aucun port disponible entre 5050 et 5100');
-    }
-    return port;
-}
-  
+// Optional: track the running Remotion server instance
 let remotionServer: http.Server | null = null;
 
-// --- GENERATE VIDEO ---
+// Main video generation handler
 ipcMain.handle('generate-video', async (_, inputProps) => {
   const startTime = Date.now();
-  log('🎬 Début de la génération avec props :', JSON.stringify(inputProps));
+  log('🎬 Video generation started with props:', JSON.stringify(inputProps));
 
   const projectRoot = app.getAppPath();
   const outputPath = path.join(app.getPath('videos'), 'clipforge-video.mp4');
   const bundlePath = path.join(projectRoot, 'remotion-video', 'build');
 
   if (!fs.existsSync(path.join(bundlePath, 'index.html'))) {
-    log('❌ Remotion bundle introuvable :', bundlePath);
-    throw new Error('Remotion bundle introuvable');
+    log('❌ Remotion bundle missing:', bundlePath);
+    throw new Error('Remotion bundle not found');
   }
 
   const port = await findAvailablePort(5050);
   const serveUrl = `http://127.0.0.1:${port}`;
 
-  remotionServer = http.createServer((request, response) => {
-    return serveHandler(request, response, { public: bundlePath });
-  });
-
+  remotionServer = http.createServer((req, res) => serveHandler(req, res, { public: bundlePath }));
   await new Promise<void>((resolve) => remotionServer!.listen(port, resolve));
-  log(`🚀 Serveur Remotion lancé sur ${serveUrl}`);
+  log(`🚀 Remotion server started on ${serveUrl}`);
 
   const browserExecutable = getChromiumExecutablePath();
-  log('🧠 Final browser executable:', browserExecutable);
+  log('🧠 Using browser executable:', browserExecutable);
 
   const binariesDirectory = app.isPackaged
-  ? path.join(process.resourcesPath, 'node_remotion', 'compositor-darwin-arm64')
-  : path.join(__dirname, '..', 'node_modules', '@remotion', 'compositor-darwin-arm64');
+    ? path.join(process.resourcesPath, 'node_remotion', 'compositor-darwin-arm64')
+    : path.join(__dirname, '..', 'node_modules', '@remotion', 'compositor-darwin-arm64');
 
-  log('📦 binariesDirectory utilisé pour Remotion :', binariesDirectory);
+  log('📦 Using Remotion binaries from:', binariesDirectory);
 
   try {
-    log('📥 Appel de getCompositions...');
+    log('📥 Fetching compositions...');
     const compositions = await getCompositions(serveUrl, {
       inputProps,
       browserExecutable,
@@ -146,15 +103,11 @@ ipcMain.handle('generate-video', async (_, inputProps) => {
       timeoutInMilliseconds: 15000,
     });
 
-    log('🎃 Compositions trouvées:', compositions);
-
+    log('🎃 Compositions found:', compositions);
     const composition = compositions.find((c) => c.id === 'ClipForge');
-    if (!composition) {
-      log('❌ Composition "ClipForge" non trouvée');
-      throw new Error('Composition "ClipForge" non trouvée');
-    }
+    if (!composition) throw new Error('Composition "ClipForge" not found');
 
-    log('✅ Composition ClipForge trouvée');
+    log('✅ Composition "ClipForge" selected');
 
     await renderMedia({
       composition,
@@ -179,33 +132,21 @@ ipcMain.handle('generate-video', async (_, inputProps) => {
     });
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    log(`✅ Vidéo générée en ${duration}s à ${outputPath}`);
+    log(`✅ Video successfully rendered in ${duration}s → ${outputPath}`);
     return outputPath;
   } catch (err) {
-    log('❌ Erreur de rendu :', err);
+    log('❌ Rendering error:', err);
     throw err;
   } finally {
-    remotionServer.close();
-    log('🛑 Serveur HTTP Remotion stoppé');
+    remotionServer?.close();
+    log('🛑 Remotion server closed');
   }
 });
-app.on('window-all-closed', () => {
-    if (remotionServer) {
-        remotionServer.close(() => {
-          log('🛑 Serveur Remotion fermé suite à la fermeture de la fenêtre Electron');
-          remotionServer = null;
-        });
-    }
-    app.quit()
-});
 
-// mainWindow.on('closed', () => {
-//     if (remotionServer) {
-//       remotionServer.close(() => {
-//         log('🛑 Serveur Remotion fermé suite à la fermeture de la fenêtre Electron');
-//         remotionServer = null;
-//       });
-//     }
-//     mainWindow = null;
-// });
-  
+app.on('window-all-closed', () => {
+  remotionServer?.close(() => {
+    log('🛑 Remotion server stopped after window closed');
+    remotionServer = null;
+  });
+  app.quit();
+});

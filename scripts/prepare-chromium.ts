@@ -4,8 +4,8 @@ import { copy, remove } from 'fs-extra';
 import path from 'path';
 import os from 'os';
 
-async function main() {
-  console.log('🔍 Détection de la plateforme...');
+async function prepareChromium() {
+  console.log('🔍 Detecting platform...');
 
   const platform = os.platform();
   const arch = os.arch();
@@ -20,13 +20,13 @@ async function main() {
   } else if (platform === 'linux') {
     browserPlatform = BrowserPlatform.LINUX;
   } else {
-    throw new Error(`❌ Plateforme non supportée: ${platform} ${arch}`);
+    throw new Error(`❌ Unsupported platform: ${platform} ${arch}`);
   }
 
-  console.log(`✅ Plateforme détectée : ${browserPlatform}`);
+  console.log(`✅ Platform detected: ${browserPlatform}`);
 
-  // 📥 Téléchargement de Chrome Headless Shell
-  console.log('⏬ Téléchargement de Chrome Headless Shell...');
+  // --- Download Chrome Headless Shell ---
+  console.log('⏬ Downloading Chrome Headless Shell...');
 
   const installedBrowser = await install({
     cacheDir: path.join(__dirname, '..', '.chromium-cache'),
@@ -36,26 +36,26 @@ async function main() {
   });
 
   const downloadedPath = path.dirname(installedBrowser.executablePath);
-  console.log(`✅ Chrome téléchargé à : ${downloadedPath}`);
+  console.log(`✅ Chrome downloaded to: ${downloadedPath}`);
 
-  // 📦 Copie complète du dossier téléchargé
+  // --- Copy downloaded Chrome into /chrome-headless-shell ---
   const destFolder = path.join(__dirname, '..', 'chrome-headless-shell');
-  console.log('📂 Copie de Chrome Headless Shell...');
+  console.log('📂 Copying Chrome Headless Shell...');
 
   await fs.mkdir(destFolder, { recursive: true });
   await copy(downloadedPath, destFolder);
 
-  console.log(`✅ Chrome copié dans : ${destFolder}`);
+  console.log(`✅ Chrome copied to: ${destFolder}`);
 
-  // 🧹 Nettoyage du cache temporaire
+  // --- Clean download cache ---
   const cachePath = path.join(__dirname, '..', '.chromium-cache');
-  console.log('🧹 Nettoyage du cache de téléchargement...');
+  console.log('🧹 Cleaning download cache...');
   await remove(cachePath);
 
-  console.log('✅ Clean terminé.');
+  console.log('✅ Clean finished.');
 }
 
-main().catch((err) => {
-  console.error('❌ Erreur durant prepare-chromium:', err);
+prepareChromium().catch((err) => {
+  console.error('❌ Error during prepare-chromium:', err);
   process.exit(1);
 });

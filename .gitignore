@@ -93,3 +93,5 @@ remotion-cache/
 **/resources/chromium/
 **/resources/chrome-headless-shell/
 **/resources/chrome/
+
+remotion-video/build
